@@ -1,7 +1,7 @@
-package com.project.example.repositories;
+package com.project.example.repository;
 
 import com.project.example.util.MapBuilder;
-import com.project.example.vo.ExampleVO;
+import com.project.example.vo.TNotMappedVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 @Repository
-public class ExampleRepository {
+public class TNotMappedRepository {
 
     private static final String PATTERN = "yyyy-MM-dd";
 
@@ -24,20 +24,20 @@ public class ExampleRepository {
 		return jdbcTemplate;
 	}
 
-    public ExampleVO findPossibleHolidayInfo(LocalDate possibleHolidayDayDate) {
-        String sql = "SELECT TO_CHAR(DT_FERI, :PATTERN) FERIADO, \n" +
-                " TO_CHAR(DT_PROX_DIA_UTIL, :PATTERN) PROX_DIA_UTIL \n" +
-                " FROM TCFG_DIA_UTIL \n" +
-                " WHERE TO_CHAR(DT_FERI, :PATTERN) = :DT_FERI ";
+    public TNotMappedVO findNextBusinessDayOfHolidayDate(LocalDate possibleHolidayDayDate) {
+        String sql = "SELECT TO_CHAR(DT_DAY, :PATTERN) DAY, \n" +
+                " TO_CHAR(DT_NEXT_BUSINESS_DAY, :PATTERN) DT_NEXT_BUSINESS_DAY \n" +
+                " FROM T_NOT_MAPPED \n" +
+                " WHERE TO_CHAR(DT_DAY, :PATTERN) = :DT_DAY ";
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(PATTERN);
         Map<String, Object> params = new MapBuilder<String, Object>().build();
-        params.put("DT_FERI", possibleHolidayDayDate.format(formatter));
+        params.put("DT_DAY", possibleHolidayDayDate.format(formatter));
         params.put("PATTERN", PATTERN);
 
         try {
-            return getJdbcTemplate().queryForObject(sql, params, (rs, i) -> new ExampleVO(PATTERN,
-					rs.getString("FERIADO"),
-					rs.getString("PROX_DIA_UTIL")));
+            return getJdbcTemplate().queryForObject(sql, params, (rs, i) -> new TNotMappedVO(PATTERN,
+					rs.getString("DAY"),
+					rs.getString("DT_NEXT_BUSINESS_DAY")));
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
